@@ -619,7 +619,19 @@ Trigger handlers if notified
 ```
 
 ---
+---
 
+## Ansible Galaxy
+
+### What is Ansible Galaxy?
+A public repository for reusable Ansible roles.
+
+### Commands
+```bash
+ansible-galaxy install username.role_name
+ansible-galaxy init role_name
+```
+---
 ## 21. Best Practices Summary
 
 - Use modules instead of command
