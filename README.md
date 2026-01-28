@@ -818,6 +818,141 @@ ansible-galaxy init role_name
 ```
 ---
 ---
+#  Ansible Vault 
+
+This document provides a **short, clear overview** of **Ansible Vault** and how it is used to protect sensitive data in Ansible projects.
+
+---
+
+## What is Ansible Vault?
+
+**Ansible Vault** is a feature that allows you to **encrypt sensitive data** used by Ansible.
+
+It is commonly used to protect:
+- Passwords
+- API keys
+- Tokens
+- Private credentials
+
+Vault enables you to safely store secrets inside your Ansible repository (including Git).
+
+---
+
+## Why Use Ansible Vault?
+
+Without Vault:
+- Secrets are stored in plain text
+- Anyone with repository access can read them
+
+With Vault:
+- Sensitive data is encrypted at rest
+- Data is decrypted only at runtime
+- Repositories can be safely shared
+
+---
+
+## What Can Be Encrypted?
+
+Ansible Vault can encrypt:
+- Variable files (`vars.yml`)
+- `group_vars` and `host_vars`
+- Entire playbooks
+- Individual variables (inline encryption)
+
+---
+
+## Basic Vault Commands
+
+### Create an Encrypted File
+```bash
+ansible-vault create secrets.yml
+```
+
+---
+
+### Edit an Encrypted File
+```bash
+ansible-vault edit secrets.yml
+```
+
+---
+
+### View an Encrypted File
+```bash
+ansible-vault view secrets.yml
+```
+
+---
+
+### Encrypt an Existing File
+```bash
+ansible-vault encrypt vars.yml
+```
+
+---
+
+### Decrypt a File
+```bash
+ansible-vault decrypt vars.yml
+```
+
+---
+
+## Using Vault in a Playbook
+
+```yaml
+- hosts: all
+  vars_files:
+    - secrets.yml
+```
+
+Run the playbook with:
+```bash
+ansible-playbook play.yml --ask-vault-pass
+```
+
+---
+
+## Encrypting a Single Variable (Inline Vault)
+
+```bash
+ansible-vault encrypt_string 'mypassword' --name 'db_password'
+```
+
+Result:
+```yaml
+db_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  6638646535...
+```
+
+---
+
+## Vault Password Options
+
+- `--ask-vault-pass` — prompt for password manually
+- `--vault-password-file` — use a password file (CI/CD friendly)
+
+---
+
+## Best Practices
+
+- Never store secrets in plain text
+- Encrypt only sensitive data
+- Use separate vault files per environment (dev / stage / prod)
+- Never commit vault passwords to version control
+
+---
+
+## Mental Model
+
+> **Ansible Vault is an encryption mechanism for secrets, not an access control system.**
+
+---
+
+
+
+---
 #  YAML Multi-Line Values in Ansible (`|` and `>`)
 ---
 This document explains **how to write multi-line values in Ansible playbooks** using YAML block scalars.  
