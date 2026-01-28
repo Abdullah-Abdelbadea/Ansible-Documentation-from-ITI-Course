@@ -539,6 +539,15 @@ Prevents failures when a variable is missing.
 
 ### What is Fact Gathering?
 
+```bash
+- ansible node01 -m setup
+```
+### this command return all gatheing facts variables -> returned as json file
+```bash
+- ansible node01 -m setup -a "filter=ansible_default_ipv4"
+- ansible node01 -m setup -a "filter=ansible_distribution*"
+```
+
 **Fact gathering** is the process where Ansible automatically collects information about managed nodes **before executing tasks**.
 
 These collected details are called **Ansible Facts**.
@@ -808,7 +817,243 @@ ansible-galaxy install username.role_name
 ansible-galaxy init role_name
 ```
 ---
-## 22. Best Practices Summary
+---
+#  YAML Multi-Line Values in Ansible (`|` and `>`)
+---
+This document explains **how to write multi-line values in Ansible playbooks** using YAML block scalars.  
+It focuses on the two most important operators:
+
+- **Literal block (`|`)**
+- **Folded block (`>`)**
+
+Understanding these correctly is critical for writing:
+- Shell scripts
+- Configuration files
+- Long commands
+- Readable and correct playbooks
+
+---
+
+## 1. Literal Block (`|`)
+
+### What Does `|` Mean?
+
+The **literal block scalar (`|`)** tells YAML to:
+
+> Preserve all line breaks exactly as written.
+
+Every new line in the YAML file remains a new line in the final value.
+
+---
+
+### Example: Multi-Line Message
+
+```yaml
+- name: Print multi-line message
+  debug:
+    msg: |
+      This is line one
+      This is line two
+      This is line three
+```
+
+### Resulting Value
+```
+This is line one
+This is line two
+This is line three
+```
+
+---
+
+### Example: Multi-Line Shell Script
+
+```yaml
+- name: Run shell script
+  shell: |
+    echo "Starting service"
+    systemctl restart nginx
+    echo "Service restarted"
+```
+
+Each line is executed separately.
+
+---
+
+### When to Use `|`
+
+Use the literal block (`|`) when:
+- Writing shell scripts
+- Writing configuration files
+- Formatting matters
+- Line breaks must be preserved
+
+---
+
+## 2. Folded Block (`>`)
+
+### What Does `>` Mean?
+
+The **folded block scalar (`>`)** tells YAML to:
+
+> Convert line breaks into spaces and produce a single line.
+
+This improves readability in YAML while keeping the final value on one line.
+
+---
+
+### Example: Folded Text
+
+```yaml
+- name: Print folded text
+  debug:
+    msg: >
+      This is line one
+      This is line two
+      This is line three
+```
+
+### Resulting Value
+```
+This is line one This is line two This is line three
+```
+
+---
+
+### Example: Long Command (Readable YAML)
+
+```yaml
+- name: Send API request
+  shell: >
+    curl -X POST
+    -H "Content-Type: application/json"
+    -d '{"name":"app","env":"prod"}'
+    https://api.example.com/deploy
+```
+
+### Executed Command
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{"name":"app","env":"prod"}' https://api.example.com/deploy
+```
+
+---
+
+### When to Use `>`
+
+Use the folded block (`>`) when:
+- Writing long single-line commands
+- Readability matters
+- Line breaks are not semantically important
+
+---
+
+## 3. Blank Lines Behavior
+
+### Literal Block (`|`)
+
+```yaml
+msg: |
+  line one
+
+  line two
+```
+
+Result:
+```
+line one
+
+line two
+```
+
+---
+
+### Folded Block (`>`)
+
+```yaml
+msg: >
+  line one
+
+  line two
+```
+
+Result:
+```
+line one
+
+line two
+```
+
+Blank lines are preserved in both cases.
+
+---
+
+## 4. Chomp Modifiers
+
+YAML adds a trailing newline by default. Chomp modifiers control this behavior.
+
+---
+
+### `|-` Remove Trailing Newline
+
+```yaml
+msg: |-
+  Hello
+```
+
+---
+
+### `|+` Preserve Extra Newlines
+
+```yaml
+msg: |+
+  Hello
+```
+
+---
+
+### Folded Versions
+
+```yaml
+msg: >-
+  Hello
+```
+
+```yaml
+msg: >+
+  Hello
+```
+
+---
+
+## 5. Templates and Multi-Line Values
+
+Jinja2 templates behave like literal blocks (`|`).
+
+Formatting inside templates is preserved exactly as written.
+
+Example:
+
+```jinja2
+server {
+  listen {{ nginx_port }};
+  server_name {{ server_name }};
+}
+```
+
+---
+
+## 6. Common Mistakes
+
+- Using `>` for shell scripts (breaks execution)
+- Using `|` for long one-line commands
+- Incorrect indentation
+- Forgetting chomp modifiers when needed
+
+---
+
+
+---
+## 23. Best Practices Summary
 
 - Use modules instead of command
 - Keep playbooks thin
