@@ -535,7 +535,183 @@ Prevents failures when a variable is missing.
 
 ---
 
-## 18. Roles (Implementation Layer)
+## 18. Gathering Facts (Ansible Facts)
+
+### What is Fact Gathering?
+
+**Fact gathering** is the process where Ansible automatically collects information about managed nodes **before executing tasks**.
+
+These collected details are called **Ansible Facts**.
+
+Facts describe the **current state of the system**, such as:
+- Operating system
+- IP addresses
+- CPU and memory
+- Disk layout
+- Network interfaces
+- Kernel version
+
+---
+
+### When Facts Are Gathered
+
+By default, Ansible gathers facts:
+- At the **start of every play**
+- Before any task is executed
+
+This behavior is controlled by:
+```yaml
+gather_facts: true
+```
+
+---
+
+### Example: Default Behavior
+
+```yaml
+- hosts: all
+  tasks:
+    - debug:
+        var: ansible_os_family
+```
+
+Even though no task gathers facts explicitly, Ansible already knows `ansible_os_family`.
+
+---
+
+### Disabling Fact Gathering
+
+Fact gathering can be disabled to:
+- Speed up execution
+- Reduce overhead
+- Optimize large inventories
+
+```yaml
+- hosts: all
+  gather_facts: false
+  tasks:
+    - debug:
+        msg: "Facts are disabled"
+```
+
+---
+
+### Commonly Used Facts
+
+```yaml
+ansible_os_family
+ansible_distribution
+ansible_distribution_version
+ansible_hostname
+ansible_facts['default_ipv4']['address']
+ansible_processor_vcpus
+ansible_memtotal_mb
+```
+
+---
+
+### Using Facts in Conditions
+
+Facts are commonly used with `when` conditions.
+
+```yaml
+- name: Install nginx on Debian systems
+  apt:
+    name: nginx
+    state: present
+  when: ansible_os_family == "Debian"
+```
+### Different OS = Different Package Manager
+```yaml
+- name: Install nginx
+  apt:
+    name: nginx
+    state: present
+  when: ansible_facts.os_family == "Debian"
+
+- name: Install nginx
+  yum:
+    name: nginx
+    state: present
+  when: ansible_facts.os_family == "RedHat"
+```
+
+---
+
+### Using Facts in Templates
+
+Facts can be injected directly into templates.
+
+```jinja2
+# Generated on {{ ansible_hostname }}
+# OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+server_name {{ ansible_facts.hostname }};
+
+{% if ansible_facts.memtotal_mb > 4096 %}
+worker_processes auto;
+{% endif %}
+
+
+```
+
+---
+
+### Custom Facts
+
+Custom facts can be defined on managed nodes.
+
+Example file:
+```text
+/etc/ansible/facts.d/app.fact
+```
+
+Content:
+```ini
+[app]
+version=1.2.3
+environment=production
+```
+
+Accessed as:
+```yaml
+ansible_facts['app']['version']
+```
+
+---
+
+### setup Module (Manual Fact Gathering)
+
+The `setup` module is responsible for collecting facts.
+
+```bash
+ansible all -m setup
+```
+
+To limit facts:
+```bash
+ansible all -m setup -a "filter=ansible_distribution*"
+```
+
+---
+
+### Performance Considerations
+
+- Fact gathering can be slow on large inventories
+- Disable it when facts are not needed
+- Use `filter` to limit collected data
+
+---
+
+### Best Practices for Fact Gathering
+
+- Disable facts for simple ad-hoc tasks
+- Use facts for OS-specific logic
+- Avoid overusing facts in templates
+- Prefer explicit variables when possible
+
+---
+
+## 19. Roles (Implementation Layer)
 
 ### What is a Role?
 A **role** is a standardized directory structure that encapsulates:
@@ -584,7 +760,7 @@ Role-internal values that should not be overridden lightly.
 
 ---
 
-## 19. Plays Folder (Orchestration Layer)
+## 20. Plays Folder (Orchestration Layer)
 
 Defines **what runs where**, not how.
 
@@ -604,7 +780,7 @@ plays/
 
 ---
 
-## 20. Plays vs Roles Execution Flow
+## 21. Plays vs Roles Execution Flow
 
 ```text
 ansible-playbook plays/web.yml
@@ -632,7 +808,7 @@ ansible-galaxy install username.role_name
 ansible-galaxy init role_name
 ```
 ---
-## 21. Best Practices Summary
+## 22. Best Practices Summary
 
 - Use modules instead of command
 - Keep playbooks thin
